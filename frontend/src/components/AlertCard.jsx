@@ -1,6 +1,7 @@
 import React from 'react';
 import { AlertCircle, MapPin, ExternalLink, Clock, CheckCircle2, ShieldOff, Play, Volume2 } from 'lucide-react';
 import { TRIGGER_TYPES } from '../utils/constants';
+import { getEvidenceAudioUrl } from '../services/api';
 
 export const AlertCard = ({ alert, onResolve }) => {
   const triggerInfo = TRIGGER_TYPES[alert.triggerType] || TRIGGER_TYPES.manual_sos;
@@ -82,7 +83,7 @@ export const AlertCard = ({ alert, onResolve }) => {
           </div>
           <audio
             controls
-            src={`/api/evidence/stream/${alert.audioEvidence[0].filename}`}
+            src={getEvidenceAudioUrl(alert.audioEvidence[0].filename)}
             className="w-full h-8"
           />
         </div>
