@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { UserPlus, Save, X, Phone, User, Heart, MessageSquare, Shield } from 'lucide-react';
+import { UserPlus, Save, X, Phone, User, Heart, Mail } from 'lucide-react';
 
 export const ContactForm = ({ initialData = null, onSave, onCancel }) => {
   const [formData, setFormData] = useState({
@@ -7,7 +7,6 @@ export const ContactForm = ({ initialData = null, onSave, onCancel }) => {
     phone: initialData?.phone || '',
     relation: initialData?.relation || 'Family',
     email: initialData?.email || '',
-    telegramChatId: initialData?.telegramChatId || '',
     priority: initialData?.priority || 1,
     isEmergencyContact: initialData?.isEmergencyContact !== undefined ? initialData.isEmergencyContact : true,
   });
@@ -124,20 +123,20 @@ export const ContactForm = ({ initialData = null, onSave, onCancel }) => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
-                Telegram Chat ID (Optional)
+                Email (For SafeVoice Match)
               </label>
               <div className="relative">
-                <MessageSquare className="absolute left-3.5 top-3 w-4 h-4 text-slate-500" />
+                <Mail className="absolute left-3.5 top-3 w-4 h-4 text-slate-500" />
                 <input
-                  type="text"
-                  value={formData.telegramChatId}
-                  onChange={(e) => setFormData({ ...formData, telegramChatId: e.target.value })}
-                  placeholder="e.g. 123456789"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  placeholder="contact@example.com"
                   className="w-full pl-10 pr-4 py-2.5 bg-slate-800/80 border border-slate-700 rounded-xl text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500"
                 />
               </div>
               <span className="text-[11px] text-slate-500 mt-1 block">
-                Get via @userinfobot on Telegram
+                Matched by phone or email on SafeVoice
               </span>
             </div>
 

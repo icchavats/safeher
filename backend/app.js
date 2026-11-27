@@ -3,7 +3,6 @@ import cors from 'cors';
 import path from 'path';
 import { env } from './config/env.js';
 import { errorHandler } from './middleware/errorHandler.js';
-import { apiLimiter } from './middleware/rateLimiter.js';
 import { getDBStatus } from './config/db.js';
 
 // Route imports
@@ -14,6 +13,9 @@ import evidenceRoutes from './routes/evidenceRoutes.js';
 import analyticsRoutes from './routes/analyticsRoutes.js';
 
 const app = express();
+
+// Trust reverse proxy (Render, Vercel, Netlify) for accurate rate-limiting IP
+app.set('trust proxy', 1);
 
 // CORS configuration
 app.use(
@@ -29,9 +31,6 @@ app.use(
 // Body parsers
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
-// Apply rate limiter to /api routes
-app.use('/api', apiLimiter);
 
 // Serve evidence recordings statically
 app.use('/uploads/evidence', express.static(path.resolve('uploads/evidence')));

@@ -2,7 +2,6 @@ import path from 'path';
 import fs from 'fs';
 import { Alert } from '../models/Alert.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
-import { telegramService } from '../services/telegramService.js';
 
 // @desc    Upload audio evidence file for an alert
 // @route   POST /api/evidence/upload
@@ -53,15 +52,6 @@ export const uploadEvidence = asyncHandler(async (req, res) => {
   });
 
   await alert.save();
-
-  // Send evidence to telegram if configured
-  if (req.user.settings?.defaultTelegramChatId) {
-    telegramService.sendAudioEvidence({
-      chatId: req.user.settings.defaultTelegramChatId,
-      filePath: req.file.path,
-      caption: `🎙️ Audio Evidence for SOS Alert (${req.user.name})`,
-    });
-  }
 
   res.status(201).json({
     success: true,

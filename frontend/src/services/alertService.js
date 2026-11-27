@@ -19,6 +19,12 @@ export const alertService = {
     return response.data;
   },
 
+  // Get active incoming SOS alerts from contacts who saved the current user
+  async getIncomingAlerts() {
+    const response = await api.get('/alerts/incoming');
+    return response.data;
+  },
+
   // Get alert history
   async getAlertHistory(params = {}) {
     const response = await api.get('/alerts', { params });

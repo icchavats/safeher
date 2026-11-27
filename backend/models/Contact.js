@@ -41,6 +41,12 @@ const contactSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    linkedUser: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+      index: true,
+    },
   },
   {
     timestamps: true,

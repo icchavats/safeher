@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { contactService } from '../services/contactService';
 import { ContactCard } from '../components/ContactCard';
 import { ContactForm } from '../components/ContactForm';
-import { UserPlus, Users, MessageSquare, ShieldCheck, HelpCircle } from 'lucide-react';
+import { UserPlus, Users, BellRing } from 'lucide-react';
 
 export const Contacts = () => {
   const [contacts, setContacts] = useState([]);
@@ -59,7 +59,10 @@ export const Contacts = () => {
       const res = await contactService.testContact(id);
       setNotification({ type: 'success', message: res.message || 'Test SOS alert sent to contact!' });
     } catch (err) {
-      setNotification({ type: 'error', message: 'Failed to dispatch test notification' });
+      setNotification({
+        type: 'error',
+        message: err.response?.data?.message || 'Failed to dispatch test notification',
+      });
     }
   };
 
@@ -101,19 +104,19 @@ export const Contacts = () => {
         </div>
       )}
 
-      {/* Telegram Setup Card */}
-      <div className="p-5 bg-gradient-to-r from-sky-950/40 via-slate-900 to-indigo-950/40 border border-sky-500/30 rounded-3xl shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      {/* In-App Web SOS Info Card */}
+      <div className="p-5 bg-gradient-to-r from-rose-950/40 via-slate-900 to-emerald-950/30 border border-rose-500/30 rounded-3xl shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div className="flex items-start gap-3.5">
-          <div className="p-3 bg-sky-500/20 text-sky-400 rounded-2xl border border-sky-500/30 flex-shrink-0">
-            <MessageSquare className="w-6 h-6" />
+          <div className="p-3 bg-rose-500/20 text-rose-400 rounded-2xl border border-rose-500/30 flex-shrink-0">
+            <BellRing className="w-6 h-6" />
           </div>
           <div>
             <h3 className="text-sm font-bold text-white flex items-center gap-2">
-              <span>Link Telegram for Instant Location & Voice Evidence</span>
-              <span className="px-2 py-0.5 text-[10px] bg-sky-500/20 text-sky-300 rounded-full font-mono">RECOMMENDED</span>
+              <span>Instant Web App SOS &amp; Loud Siren Delivery</span>
+              <span className="px-2 py-0.5 text-[10px] bg-emerald-500/20 text-emerald-300 rounded-full font-mono">BUILT-IN</span>
             </h3>
             <p className="text-xs text-slate-300 mt-1 max-w-2xl">
-              Add your contact's Telegram Chat ID to send instant interactive maps and ambient audio evidence. Ask your contact to message <code className="bg-slate-800 px-1.5 py-0.5 rounded text-sky-300">@userinfobot</code> on Telegram to find their Chat ID.
+              Save trusted contacts using the phone number or email they registered with on SafeVoice. When you trigger SOS, their SafeVoice web app immediately sounds a loud emergency siren and displays your live GPS location, audio evidence, and details.
             </p>
           </div>
         </div>

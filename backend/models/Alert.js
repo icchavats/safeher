@@ -80,16 +80,26 @@ const alertSchema = new mongoose.Schema(
           type: mongoose.Schema.Types.ObjectId,
           ref: 'Contact',
         },
+        recipientUser: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'User',
+          default: null,
+          index: true,
+        },
         name: String,
         phone: String,
+        email: {
+          type: String,
+          default: '',
+        },
         telegramChatId: String,
         method: {
           type: String,
-          default: 'telegram',
+          default: 'webapp',
         },
         status: {
           type: String,
-          enum: ['sent', 'simulated', 'failed'],
+          enum: ['sent', 'unregistered', 'simulated', 'failed'],
           default: 'sent',
         },
         error: String,

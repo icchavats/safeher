@@ -1,5 +1,5 @@
 import React from 'react';
-import { Phone, MessageSquare, Send, Trash2, Edit2, ShieldAlert } from 'lucide-react';
+import { Phone, Mail, Send, Trash2, Edit2, ShieldCheck, ShieldAlert } from 'lucide-react';
 
 export const ContactCard = ({ contact, onEdit, onDelete, onTestAlert }) => {
   return (
@@ -43,15 +43,21 @@ export const ContactCard = ({ contact, onEdit, onDelete, onTestAlert }) => {
             <Phone className="w-3.5 h-3.5 text-slate-400" />
             <span>{contact.phone}</span>
           </div>
-          {contact.telegramChatId ? (
-            <div className="flex items-center gap-2 text-sky-400">
-              <MessageSquare className="w-3.5 h-3.5" />
-              <span>Telegram Linked ({contact.telegramChatId})</span>
+          {contact.email && (
+            <div className="flex items-center gap-2 text-slate-400">
+              <Mail className="w-3.5 h-3.5" />
+              <span className="truncate">{contact.email}</span>
+            </div>
+          )}
+          {contact.isRegistered ? (
+            <div className="flex items-center gap-2 text-emerald-400 font-medium">
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>SafeVoice Registered (Live Siren Ready)</span>
             </div>
           ) : (
-            <div className="flex items-center gap-2 text-slate-500">
-              <MessageSquare className="w-3.5 h-3.5" />
-              <span>No Telegram ID (SMS dispatch)</span>
+            <div className="flex items-center gap-2 text-amber-400/80">
+              <ShieldAlert className="w-3.5 h-3.5" />
+              <span>Not registered on SafeVoice yet</span>
             </div>
           )}
         </div>
