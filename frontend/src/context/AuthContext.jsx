@@ -14,6 +14,7 @@ export const AuthProvider = ({ children }) => {
   });
   const [token, setToken] = useState(() => localStorage.getItem('safevoice_token') || null);
   const [loading, setLoading] = useState(true);
+  const [dbOffline, setDbOffline] = useState(false);
 
   // Fetch current user on mount if token exists
   useEffect(() => {
@@ -26,11 +27,16 @@ export const AuthProvider = ({ children }) => {
         const res = await api.get('/auth/me');
         if (res.data.success) {
           setUser(res.data.user);
+          setDbOffline(false);
           localStorage.setItem('safevoice_user', JSON.stringify(res.data.user));
         }
       } catch (err) {
-        console.warn('[SafeVoice Auth] Token validation error:', err.message);
-        logout();
+        if (err.response?.status === 503 || err.response?.data?.isDatabaseOffline) {
+          setDbOffline(true);
+        } else {
+          console.warn('[SafeVoice Auth] Token validation error:', err.message);
+          logout();
+        }
       } finally {
         setLoading(false);
       }
@@ -84,6 +90,8 @@ export const AuthProvider = ({ children }) => {
         token,
         isAuthenticated: Boolean(token && user),
         loading,
+        dbOffline,
+        setDbOffline,
         login,
         register,
         updateProfile,

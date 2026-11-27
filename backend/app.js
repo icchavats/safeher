@@ -38,13 +38,35 @@ app.use('/uploads/evidence', express.static(path.resolve('uploads/evidence')));
 
 // API Health Check
 app.get('/api/health', (req, res) => {
+  const dbStatus = getDBStatus();
   res.json({
-    status: 'online',
+    status: dbStatus.connected ? 'online' : 'degraded',
     appName: 'SafeVoice / SafeHer Backend API',
     version: '1.0.0',
     timestamp: new Date().toISOString(),
-    database: getDBStatus(),
+    database: dbStatus,
+    instructions: !dbStatus.connected
+      ? 'MongoDB is offline. Please provide your MongoDB Atlas cluster URI in backend/.env or start local MongoDB service.'
+      : undefined,
   });
+});
+
+// Database connectivity check for API routes
+app.use((req, res, next) => {
+  if (req.path.startsWith('/uploads') || req.path === '/api/health') {
+    return next();
+  }
+
+  const { connected } = getDBStatus();
+  if (!connected) {
+    return res.status(503).json({
+      success: false,
+      isDatabaseOffline: true,
+      error: 'MONGODB_OFFLINE',
+      message: 'MongoDB is offline or unreachable (ECONNREFUSED). Please configure a valid MONGO_URI in backend/.env (e.g. MongoDB Atlas free cluster) or start your local MongoDB service.',
+    });
+  }
+  next();
 });
 
 // Mount Routes
