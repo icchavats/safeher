@@ -14,6 +14,7 @@ import { Contacts } from './pages/Contacts';
 import { AlertHistory } from './pages/AlertHistory';
 import { Analytics } from './pages/Analytics';
 import { Safety } from './pages/Safety';
+import { GuardianMonitor } from './pages/GuardianMonitor';
 
 const GlobalEmergencyModal = () => {
   const { isCountingDown, pendingTrigger, executeSOS, abortCountdown } = useAlert();
@@ -94,6 +95,14 @@ export default function App() {
                   element={
                     <ProtectedRoute>
                       <Safety />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/guardian"
+                  element={
+                    <ProtectedRoute>
+                      <GuardianMonitor />
                     </ProtectedRoute>
                   }
                 />
