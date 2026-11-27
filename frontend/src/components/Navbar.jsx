@@ -11,8 +11,7 @@ import {
   X, 
   User, 
   AlertTriangle,
-  Lock,
-  Radio
+  Lock
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useAlert } from '../context/AlertContext';
@@ -26,7 +25,6 @@ export const Navbar = () => {
 
   const navLinks = [
     { name: 'Dashboard', path: '/', icon: AlertTriangle },
-    { name: 'Guardian', path: '/guardian', icon: Radio },
     { name: 'Contacts', path: '/contacts', icon: Users },
     { name: 'History', path: '/alerts', icon: History },
     { name: 'Analytics', path: '/analytics', icon: BarChart3 },

@@ -1,17 +1,26 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { alertService } from '../services/alertService';
 import { useAuth } from './AuthContext';
+import { emergencySiren } from '../utils/siren';
 
 const AlertContext = createContext(null);
 
 export const AlertProvider = ({ children }) => {
   const { isAuthenticated } = useAuth();
   const [activeAlert, setActiveAlert] = useState(null);
+  const [incomingAlerts, setIncomingAlerts] = useState([]);
+  const [mutedAlertIds, setMutedAlertIds] = useState([]);
+  const [dismissedAlertIds, setDismissedAlertIds] = useState([]);
+  const [sirenBlockedByBrowser, setSirenBlockedByBrowser] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isCountingDown, setIsCountingDown] = useState(false);
   const [pendingTrigger, setPendingTrigger] = useState(null);
   const [location, setLocation] = useState(null);
   const [isListeningActive, setIsListeningActive] = useState(true);
+
+  useEffect(() => {
+    emergencySiren.initAutoUnlock();
+  }, []);
 
   // Poll or fetch active alert on login
   const checkActiveAlert = useCallback(async () => {
@@ -31,9 +40,74 @@ export const AlertProvider = ({ children }) => {
     }
   }, [isAuthenticated]);
 
+  // Poll incoming SOS alerts from people who saved this user as an emergency contact
+  const checkIncomingAlerts = useCallback(async () => {
+    if (!isAuthenticated) {
+      setIncomingAlerts([]);
+      emergencySiren.stop();
+      return;
+    }
+    try {
+      const res = await alertService.getIncomingAlerts();
+      if (res.success) {
+        setIncomingAlerts(res.alerts || []);
+      }
+    } catch (err) {
+      console.warn('[SafeVoice AlertContext] Error checking incoming alerts:', err.message);
+    }
+  }, [isAuthenticated]);
+
   useEffect(() => {
     checkActiveAlert();
   }, [checkActiveAlert]);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setIncomingAlerts([]);
+      emergencySiren.stop();
+      return;
+    }
+
+    checkIncomingAlerts();
+    const interval = setInterval(checkIncomingAlerts, 4000);
+    return () => {
+      clearInterval(interval);
+      emergencySiren.stop();
+    };
+  }, [isAuthenticated, checkIncomingAlerts]);
+
+  const visibleIncomingAlerts = incomingAlerts.filter(
+    (a) => !dismissedAlertIds.includes(a._id)
+  );
+
+  const shouldPlaySiren = visibleIncomingAlerts.some(
+    (a) => !mutedAlertIds.includes(a._id)
+  );
+
+  useEffect(() => {
+    if (shouldPlaySiren) {
+      const running = emergencySiren.start();
+      setSirenBlockedByBrowser(!running);
+    } else {
+      emergencySiren.stop();
+      setSirenBlockedByBrowser(false);
+    }
+  }, [shouldPlaySiren]);
+
+  const toggleMuteIncomingAlert = (alertId) => {
+    setMutedAlertIds((prev) =>
+      prev.includes(alertId) ? prev.filter((id) => id !== alertId) : [...prev, alertId]
+    );
+  };
+
+  const unlockAndPlaySiren = () => {
+    const running = emergencySiren.start();
+    setSirenBlockedByBrowser(!running);
+  };
+
+  const dismissIncomingAlert = (alertId) => {
+    setDismissedAlertIds((prev) => (prev.includes(alertId) ? prev : [...prev, alertId]));
+  };
 
   // Execute actual SOS dispatch
   const executeSOS = async (triggerData) => {
@@ -103,6 +177,12 @@ export const AlertProvider = ({ children }) => {
       value={{
         activeAlert,
         isAlertActive: Boolean(activeAlert && activeAlert.status === 'active'),
+        incomingAlerts: visibleIncomingAlerts,
+        mutedAlertIds,
+        sirenBlockedByBrowser,
+        toggleMuteIncomingAlert,
+        unlockAndPlaySiren,
+        dismissIncomingAlert,
         loading,
         isCountingDown,
         pendingTrigger,

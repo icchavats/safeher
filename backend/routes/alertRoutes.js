@@ -3,6 +3,7 @@ import {
   triggerAlert,
   cancelAlert,
   getActiveAlert,
+  getIncomingAlerts,
   getAlertHistory,
   getAlertById,
   resolveAlert,
@@ -15,6 +16,7 @@ router.use(protect); // All alert routes require auth
 
 router.post('/trigger', triggerAlert);
 router.get('/active', getActiveAlert);
+router.get('/incoming', getIncomingAlerts);
 router.get('/', getAlertHistory);
 router.get('/:id', getAlertById);
 router.post('/:id/cancel', cancelAlert);

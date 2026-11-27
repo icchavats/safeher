@@ -3,7 +3,7 @@ import { Contact } from '../models/Contact.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { generateMapsLink } from '../utils/mapsLink.js';
 import { locationService } from '../services/locationService.js';
-import { telegramService } from '../services/telegramService.js';
+import { findRegisteredUserForContact, normalizePhoneDigits } from '../utils/matchUser.js';
 
 // @desc    Trigger an emergency SOS alert
 // @route   POST /api/alerts/trigger
@@ -52,43 +52,33 @@ export const triggerAlert = asyncHandler(async (req, res) => {
 
   const notifications = [];
 
-  // Dispatch to contacts via Telegram
+  // Dispatch in-app SOS alert to all registered emergency contacts
   for (const contact of contacts) {
-    const targetChatId = contact.telegramChatId || req.user.settings?.defaultTelegramChatId;
-    const dispatchResult = await telegramService.sendEmergencyAlert({
-      chatId: targetChatId,
-      alertData: alert,
-      userName: req.user.name,
-      userPhone: req.user.phone,
-    });
+    let recipientUserId = contact.linkedUser || null;
+    let recipientEmail = contact.email || '';
+
+    if (!recipientUserId) {
+      const matchedUser = await findRegisteredUserForContact({
+        email: contact.email,
+        phone: contact.phone,
+        excludeUserId: req.user._id,
+      });
+      if (matchedUser) {
+        recipientUserId = matchedUser._id;
+        recipientEmail = matchedUser.email || recipientEmail;
+        contact.linkedUser = matchedUser._id;
+        await contact.save();
+      }
+    }
 
     notifications.push({
       contact: contact._id,
+      recipientUser: recipientUserId,
       name: contact.name,
       phone: contact.phone,
-      telegramChatId: targetChatId || '',
-      method: 'telegram',
-      status: dispatchResult.simulated ? 'simulated' : dispatchResult.success ? 'sent' : 'failed',
-      error: dispatchResult.error || '',
-      timestamp: new Date(),
-    });
-  }
-
-  // Also send to default chat ID if configured and not already notified
-  if (req.user.settings?.defaultTelegramChatId && contacts.length === 0) {
-    const dispatchResult = await telegramService.sendEmergencyAlert({
-      chatId: req.user.settings.defaultTelegramChatId,
-      alertData: alert,
-      userName: req.user.name,
-      userPhone: req.user.phone,
-    });
-
-    notifications.push({
-      name: 'Default Dispatch Channel',
-      telegramChatId: req.user.settings.defaultTelegramChatId,
-      method: 'telegram',
-      status: dispatchResult.simulated ? 'simulated' : dispatchResult.success ? 'sent' : 'failed',
-      error: dispatchResult.error || '',
+      email: recipientEmail,
+      method: 'webapp',
+      status: recipientUserId ? 'sent' : 'unregistered',
       timestamp: new Date(),
     });
   }
@@ -98,7 +88,7 @@ export const triggerAlert = asyncHandler(async (req, res) => {
 
   res.status(201).json({
     success: true,
-    message: 'Emergency SOS alert dispatched successfully',
+    message: 'Emergency SOS alert dispatched to your registered contacts',
     alert,
   });
 });
@@ -143,22 +133,43 @@ export const cancelAlert = asyncHandler(async (req, res) => {
 
   await alert.save();
 
-  // Send safe cancellation notification to Telegram contacts
-  for (const recipient of alert.recipientsNotified) {
-    if (recipient.telegramChatId) {
-      await telegramService.sendSafeCancellation({
-        chatId: recipient.telegramChatId,
-        userName: req.user.name,
-        userPhone: req.user.phone,
-        reason: alert.cancelReason,
-      });
+  res.json({
+    success: true,
+    message: 'Alert has been safely cancelled. Your contacts have been notified.',
+    alert,
+  });
+});
+
+// @desc    Get active incoming SOS alerts where current user is a saved emergency contact
+// @route   GET /api/alerts/incoming
+// @access  Private
+export const getIncomingAlerts = asyncHandler(async (req, res) => {
+  const recipientFilters = [{ 'recipientsNotified.recipientUser': req.user._id }];
+
+  if (req.user.email) {
+    recipientFilters.push({ 'recipientsNotified.email': req.user.email.toLowerCase() });
+  }
+
+  if (req.user.phone) {
+    recipientFilters.push({ 'recipientsNotified.phone': req.user.phone });
+    const digits = normalizePhoneDigits(req.user.phone);
+    if (digits.length >= 10) {
+      recipientFilters.push({ 'recipientsNotified.phone': { $regex: `${digits.slice(-10)}$` } });
     }
   }
 
+  const incomingAlerts = await Alert.find({
+    status: 'active',
+    user: { $ne: req.user._id },
+    $or: recipientFilters,
+  })
+    .populate('user', 'name phone email')
+    .sort({ createdAt: -1 });
+
   res.json({
     success: true,
-    message: 'Alert has been safely cancelled. Your contacts have been notified you are safe.',
-    alert,
+    count: incomingAlerts.length,
+    alerts: incomingAlerts,
   });
 });
 

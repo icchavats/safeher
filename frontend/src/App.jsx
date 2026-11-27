@@ -5,6 +5,7 @@ import { AlertProvider, useAlert } from './context/AlertContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { Navbar } from './components/Navbar';
 import { CountdownModal } from './components/CountdownModal';
+import { IncomingSOSModal } from './components/IncomingSOSModal';
 import { Database } from 'lucide-react';
 
 import { Login } from './pages/Login';
@@ -14,7 +15,6 @@ import { Contacts } from './pages/Contacts';
 import { AlertHistory } from './pages/AlertHistory';
 import { Analytics } from './pages/Analytics';
 import { Safety } from './pages/Safety';
-import { GuardianMonitor } from './pages/GuardianMonitor';
 
 const GlobalEmergencyModal = () => {
   const { isCountingDown, pendingTrigger, executeSOS, abortCountdown } = useAlert();
@@ -98,14 +98,6 @@ export default function App() {
                     </ProtectedRoute>
                   }
                 />
-                <Route
-                  path="/guardian"
-                  element={
-                    <ProtectedRoute>
-                      <GuardianMonitor />
-                    </ProtectedRoute>
-                  }
-                />
 
                 {/* Fallback redirect */}
                 <Route path="*" element={<Navigate to="/" replace />} />
@@ -114,6 +106,9 @@ export default function App() {
 
             {/* Global SOS 5-second cancel countdown modal */}
             <GlobalEmergencyModal />
+
+            {/* Global Incoming SOS Alert + Loud Siren Modal */}
+            <IncomingSOSModal />
           </div>
         </AlertProvider>
       </AuthProvider>
