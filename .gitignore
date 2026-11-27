@@ -1,0 +1,11 @@
+# Root Gitignore
+node_modules/
+.env
+.env.local
+backend/.env
+backend/uploads/evidence/*
+!backend/uploads/evidence/.gitkeep
+frontend/dist/
+frontend/node_modules/
+.DS_Store
+*.log
